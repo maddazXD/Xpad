@@ -1,0 +1,34 @@
+name: Build xpad.ko for Kernel 5.10
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-driver:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Compiler Toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu build-essential libncurses-dev bison flex libssl-dev libelf-dev
+
+      - name: Download Linux 5.10 Kernel Source
+        run: |
+          curl -sL https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.10.220.tar.xz | tar -xJ
+          mv linux-5.10.220 linux
+
+      - name: Compile xpad.ko Module
+        run: |
+          cd linux
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig
+          scripts/config --enable CONFIG_INPUT_JOYSTICK
+          scripts/config --module CONFIG_JOYSTICK_XPAD
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- modules_prepare
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- M=drivers/input/joystick modules
+
+      - name: Upload Driver Result
+        uses: actions/upload-artifact@v4
+        with:
+          name: xpad-driver-arm64-5.10
+          path: linux/drivers/input/joystick/xpad.ko
