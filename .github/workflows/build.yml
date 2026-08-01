@@ -1,4 +1,4 @@
-name: Build xpad.ko for Kernel 5.10
+name: Build xpad.ko for SuiKernel 5.10.255
 
 on:
   workflow_dispatch:
@@ -13,10 +13,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc-aarch64-linux-gnu build-essential libncurses-dev bison flex libssl-dev libelf-dev
 
-      - name: Download Linux 5.10 Kernel Source
+      - name: Download Linux 5.10.255 Kernel Source
         run: |
-          curl -sL https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.10.220.tar.xz | tar -xJ
-          mv linux-5.10.220 linux
+          curl -sL https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.10.255.tar.xz | tar -xJ
+          mv linux-5.10.255 linux
+
+      - name: Match SuiKernel Vermagic Identity
+        run: |
+          cd linux
+          sed -i 's/^EXTRAVERSION =.*/EXTRAVERSION = -SuiKernel-Stable-KSUN/' Makefile
 
       - name: Compile xpad.ko Module
         run: |
@@ -30,5 +35,5 @@ jobs:
       - name: Upload Driver Result
         uses: actions/upload-artifact@v4
         with:
-          name: xpad-driver-arm64-5.10
+          name: xpad-SuiKernel-5.10.255
           path: linux/drivers/input/joystick/xpad.ko
